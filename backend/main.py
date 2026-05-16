@@ -9,9 +9,30 @@ from models import models
 from router import activos as activos_router
 from router import auth as auth_router
 from router import mantenciones as mantenciones_router
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 
 # Crear tablas en la base de datos
 models.Base.metadata.create_all(bind=engine)
+
+# Poblar base de datos inicial si está vacía
+def seed_inicial():
+    pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    db = Session(bind=engine)
+    try:
+        from models.models import Usuario
+        if not db.query(Usuario).first():
+            usuarios = [
+                Usuario(username="admin", password=pwd.hash("admin123"), rol="admin"),
+                Usuario(username="tecnico1", password=pwd.hash("tecnico123"), rol="tecnico"),
+            ]
+            for u in usuarios:
+                db.add(u)
+            db.commit()
+    finally:
+        db.close()
+
+seed_inicial()
 
 app = FastAPI(
     title="Gestor de Activos TI - SoporteTech",
