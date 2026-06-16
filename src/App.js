@@ -17,12 +17,12 @@ const NAV = [
 ];
 
 export default function App() {
-  const [pagina,    setPagina]   = useState('dashboard');
-  const [activos,   setActivos]  = useState([]);
-  const [historial, setHistorial]= useState([]);
-  const [usuario,   setUsuario]  = useState(localStorage.getItem('username'));
-  const [rol,       setRol]      = useState(localStorage.getItem('rol'));
-  const [loading,   setLoading]  = useState(false);
+  const [pagina,    setPagina]    = useState('dashboard');
+  const [activos,   setActivos]   = useState([]);
+  const [historial, setHistorial] = useState([]);
+  const [usuario,   setUsuario]   = useState(localStorage.getItem('username'));
+  const [rol,       setRol]       = useState(localStorage.getItem('rol'));
+  const [loading,   setLoading]   = useState(false);
 
   useEffect(() => {
     if (usuario) cargarDatos();
@@ -56,9 +56,26 @@ export default function App() {
     setRol(localStorage.getItem('rol'));
   }} />;
 
+  const spinner = (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 150, gap: 16 }}>
+      <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid #222', borderTop: '3px solid #4fc3f7', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ color: '#555', fontSize: 13 }}>Cargando datos...</div>
+    </div>
+  );
+
+  const contenido = (
+    <>
+      {pagina === 'dashboard'    && <Dashboard    activos={activos} historial={historial} />}
+      {pagina === 'activos'      && <Activos      activos={activos} setActivos={setActivos} setHistorial={setHistorial} cargarDatos={cargarDatos} rol={rol} />}
+      {pagina === 'asignacion'   && <Asignacion   activos={activos} setActivos={setActivos} historial={historial} setHistorial={setHistorial} cargarDatos={cargarDatos} rol={rol} />}
+      {pagina === 'mantenciones' && <Mantenciones activos={activos} rol={rol} cargarDatos={cargarDatos} />}
+      {pagina === 'reporteria'   && <Reporteria   activos={activos} historial={historial} />}
+    </>
+  );
+
   return (
     <div style={styles.root}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } select option { background: #1a1a1a; }`}</style>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } select option { background: #1a1a1a; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <nav style={styles.sidebar}>
         <div style={styles.logo}>
@@ -66,18 +83,20 @@ export default function App() {
           <div style={styles.logoSub}>Gestor de Activos TI</div>
         </div>
         {NAV.map(n => (
-          <div key={n.id} style={styles.navItem(pagina === n.id)} onClick={() => setPagina(n.id)}>
-            <span style={{ fontSize: 16 }}>{n.icon}</span>
-            <span>{n.label}</span>
-          </div>
-        ))}
+  <div key={n.id} style={styles.navItem(pagina === n.id)} onClick={() => setPagina(n.id)}>
+    <span style={{ fontSize: 16 }}>{n.icon}</span>
+    <span style={{ flex: 1 }}>{n.label}</span>
+    {n.id === 'activos' && activos.filter(a => a.estado === 'En reparacion').length > 0 && (
+      <span style={{ background: '#ef5350', color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>
+        {activos.filter(a => a.estado === 'En reparacion').length}
+      </span>
+    )}
+  </div>
+))}
         <div style={{ flex: 1 }} />
         <div style={{ padding: '16px 20px', borderTop: '1px solid #222' }}>
           <div style={{ fontSize: 12, color: '#ddd', marginBottom: 4 }}>{usuario}</div>
-          <div style={{
-            fontSize: 10, color: rol === 'admin' ? '#4fc3f7' : '#ffa726',
-            marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1
-          }}>{rol || 'tecnico'}</div>
+          <div style={{ fontSize: 10, color: rol === 'admin' ? '#4fc3f7' : '#ffa726', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>{rol || 'tecnico'}</div>
           <button style={{ ...styles.btn('danger'), width: '100%', fontSize: 11 }} onClick={handleLogout}>
             Cerrar sesion
           </button>
@@ -85,20 +104,11 @@ export default function App() {
       </nav>
 
       <main style={styles.main}>
-        {loading ? (
-          <div style={{ color: '#555', fontSize: 13, marginTop: 100, textAlign: 'center' }}>
-            Cargando datos...
-          </div>
-        ) : (
-          <>
-            {pagina === 'dashboard'    && <Dashboard    activos={activos} historial={historial} />}
-            {pagina === 'activos'      && <Activos      activos={activos} setActivos={setActivos} setHistorial={setHistorial} cargarDatos={cargarDatos} rol={rol} />}
-            {pagina === 'asignacion'   && <Asignacion   activos={activos} setActivos={setActivos} historial={historial} setHistorial={setHistorial} cargarDatos={cargarDatos} rol={rol} />}
-            {pagina === 'mantenciones' && <Mantenciones activos={activos} rol={rol} cargarDatos={cargarDatos} />}
-            {pagina === 'reporteria'   && <Reporteria   activos={activos} historial={historial} />}
-          </>
-        )}
+        {loading ? spinner : contenido}
       </main>
     </div>
   );
 }
+
+
+

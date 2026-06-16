@@ -4,6 +4,7 @@ import { TIPOS, ESTADOS } from '../data/datosIniciales';
 import { crearActivo, actualizarActivo, eliminarActivo } from '../api';
 
 const FORM_INICIAL = { nombre: '', tipo: 'Computador', marca: '', modelo: '', serie: '', estado: 'Operativo', fecha: '' };
+const ITEMS_POR_PAGINA = 8;
 
 export default function Activos({ activos, setActivos, setHistorial, cargarDatos, rol }) {
   const [modal,   setModal]   = useState(false);
@@ -13,13 +14,22 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
   const [loading, setLoading] = useState(false);
   const [filtroTipo,   setFiltroTipo]   = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+  //  Paginación
+  const [pagina, setPagina] = useState(1);
 
   const activosFiltrados = activos.filter(a =>
-  (a.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-   a.serie.toLowerCase().includes(filtro.toLowerCase())) &&
-  (filtroTipo   ? a.tipo   === filtroTipo   : true) &&
-  (filtroEstado ? a.estado === filtroEstado : true)
-);
+    (a.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+     a.serie.toLowerCase().includes(filtro.toLowerCase())) &&
+    (filtroTipo   ? a.tipo   === filtroTipo   : true) &&
+    (filtroEstado ? a.estado === filtroEstado : true)
+  );
+
+  //  Paginación
+  const totalPaginas = Math.ceil(activosFiltrados.length / ITEMS_POR_PAGINA);
+  const activosPaginados = activosFiltrados.slice(
+    (pagina - 1) * ITEMS_POR_PAGINA,
+    pagina * ITEMS_POR_PAGINA
+  );
 
   function abrirNuevo() {
     setForm(FORM_INICIAL);
@@ -33,8 +43,15 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     setModal(true);
   }
 
+  //  Validación robusta en formularios
   async function guardar() {
-    if (!form.nombre || !form.serie) return alert('Nombre y número de serie son obligatorios.');
+    if (!form.nombre.trim()) return alert('El nombre es obligatorio.');
+    if (!form.tipo) return alert('El tipo es obligatorio.');
+    if (!form.marca.trim()) return alert('La marca es obligatoria.');
+    if (!form.modelo.trim()) return alert('El modelo es obligatorio.');
+    if (!form.serie.trim()) return alert('El número de serie es obligatorio.');
+    if (!form.estado) return alert('El estado es obligatorio.');
+    if (!form.fecha) return alert('La fecha de ingreso es obligatoria.');
     setLoading(true);
     try {
       if (editId) {
@@ -46,6 +63,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
       setModal(false);
       setForm(FORM_INICIAL);
       setEditId(null);
+      setPagina(1);
     } catch (err) {
       alert(err.response?.data?.detail || 'Error al guardar');
     } finally {
@@ -58,6 +76,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     try {
       await eliminarActivo(id);
       await cargarDatos();
+      setPagina(1);
     } catch (err) {
       alert('Error al eliminar');
     }
@@ -69,26 +88,33 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
       <div style={styles.pageSub}>Gestiona el inventario de equipos e insumos tecnologicos.</div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10 }}>
-  <div style={{ display: 'flex', gap: 10, flex: 1 }}>
-    <input
-      style={{ ...styles.input, width: 220 }}
-      placeholder="Buscar por nombre o serie..."
-      value={filtro}
-      onChange={e => setFiltro(e.target.value)}
-    />
-    <select style={{ ...styles.input, width: 160 }} value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)}>
-      <option value="">Todos los tipos</option>
-      {TIPOS.map(t => <option key={t}>{t}</option>)}
-    </select>
-    <select style={{ ...styles.input, width: 160 }} value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-      <option value="">Todos los estados</option>
-      {ESTADOS.map(e => <option key={e}>{e}</option>)}
-    </select>
+        <div style={{ display: 'flex', gap: 10, flex: 1 }}>
+          <input
+            style={{ ...styles.input, width: 220 }}
+            placeholder="Buscar por nombre o serie..."
+            value={filtro}
+            onChange={e => { setFiltro(e.target.value); setPagina(1); }}
+          />
+          <select style={{ ...styles.input, width: 160 }} value={filtroTipo} onChange={e => { setFiltroTipo(e.target.value); setPagina(1); }}>
+            <option value="">Todos los tipos</option>
+            {TIPOS.map(t => <option key={t}>{t}</option>)}
+          </select>
+          <select style={{ ...styles.input, width: 160 }} value={filtroEstado} onChange={e => { setFiltroEstado(e.target.value); setPagina(1); }}>
+            <option value="">Todos los estados</option>
+            {ESTADOS.map(e => <option key={e}>{e}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+    {(filtro || filtroTipo || filtroEstado) && (
+      <button style={styles.btn('ghost')} onClick={() => { setFiltro(''); setFiltroTipo(''); setFiltroEstado(''); setPagina(1); }}>
+        ✕ Limpiar filtros
+      </button>
+    )}
+    {rol === 'admin' && (
+      <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nuevo Activo</button>
+    )}
   </div>
-  {rol === 'admin' && (
-    <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nuevo Activo</button>
-  )}
-</div>
+      </div>
 
       <div style={styles.card}>
         <table style={styles.table}>
@@ -100,7 +126,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
             </tr>
           </thead>
           <tbody>
-            {activosFiltrados.map(a => (
+            {activosPaginados.map(a => (
               <tr key={a.id}>
                 <td style={styles.td}>{a.nombre}</td>
                 <td style={{ ...styles.td, color: '#666' }}>{a.tipo}</td>
@@ -122,11 +148,28 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
                 </td>
               </tr>
             ))}
-            {activosFiltrados.length === 0 && (
+            {activosPaginados.length === 0 && (
               <tr><td colSpan={7} style={{ ...styles.td, textAlign: 'center', color: '#444', padding: 32 }}>No se encontraron activos.</td></tr>
             )}
           </tbody>
         </table>
+
+        {/*  Paginación */}
+        {totalPaginas > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: 16, borderTop: '1px solid #1a1a1a' }}>
+            <button
+              style={{ ...styles.btn('ghost'), opacity: pagina === 1 ? 0.4 : 1 }}
+              onClick={() => setPagina(p => Math.max(1, p - 1))}
+              disabled={pagina === 1}
+            >← Anterior</button>
+            <span style={{ color: '#888', fontSize: 12 }}>Página {pagina} de {totalPaginas}</span>
+            <button
+              style={{ ...styles.btn('ghost'), opacity: pagina === totalPaginas ? 0.4 : 1 }}
+              onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+              disabled={pagina === totalPaginas}
+            >Siguiente →</button>
+          </div>
+        )}
       </div>
 
       {modal && (
@@ -139,9 +182,9 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
               {[
                 { label: 'Nombre del activo *', key: 'nombre', type: 'text' },
                 { label: 'N° de Serie *',        key: 'serie',  type: 'text' },
-                { label: 'Marca',                key: 'marca',  type: 'text' },
-                { label: 'Modelo',               key: 'modelo', type: 'text' },
-                { label: 'Fecha de ingreso',     key: 'fecha',  type: 'date' },
+                { label: 'Marca *',              key: 'marca',  type: 'text' },
+                { label: 'Modelo *',             key: 'modelo', type: 'text' },
+                { label: 'Fecha de ingreso *',   key: 'fecha',  type: 'date' },
               ].map(({ label, key, type }) => (
                 <div key={key}>
                   <label style={styles.label}>{label}</label>
@@ -149,13 +192,13 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
                 </div>
               ))}
               <div>
-                <label style={styles.label}>Tipo</label>
+                <label style={styles.label}>Tipo *</label>
                 <select style={styles.input} value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}>
                   {TIPOS.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={styles.label}>Estado</label>
+                <label style={styles.label}>Estado *</label>
                 <select style={styles.input} value={form.estado} onChange={e => setForm(f => ({ ...f, estado: e.target.value }))}>
                   {ESTADOS.map(e => <option key={e}>{e}</option>)}
                 </select>
@@ -173,3 +216,5 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     </div>
   );
 }
+
+

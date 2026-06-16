@@ -4,6 +4,15 @@ export default function Dashboard({ activos, historial }) {
   const operativos   = activos.filter(a => a.estado === 'Operativo').length;
   const enReparacion = activos.filter(a => a.estado === 'En reparacion').length;
   const dadosDeBaja  = activos.filter(a => a.estado === 'Dado de baja').length;
+  const asignados    = activos.filter(a => a.asignado_a).length;
+
+  // M-11: Distribución por tipo para gráfico
+  const porTipo = activos.reduce((acc, a) => {
+    acc[a.tipo] = (acc[a.tipo] || 0) + 1;
+    return acc;
+  }, {});
+
+  const coloresTipo = ['#4fc3f7', '#66bb6a', '#ffa726', '#ef5350', '#ab47bc', '#26c6da'];
 
   return (
     <div>
@@ -12,10 +21,11 @@ export default function Dashboard({ activos, historial }) {
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 28 }}>
         {[
-          { num: activos.length, label: 'Total activos',    color: '#4fc3f7' },
-          { num: operativos,     label: 'Operativos',       color: '#66bb6a' },
-          { num: enReparacion,   label: 'En reparacion',    color: '#ffa726' },
-          { num: dadosDeBaja,    label: 'Dados de baja',    color: '#ef5350' },
+          { num: activos.length, label: 'Total activos',  color: '#4fc3f7' },
+          { num: operativos,     label: 'Operativos',     color: '#66bb6a' },
+          { num: asignados,      label: 'Asignados',      color: '#ab47bc' },
+          { num: enReparacion,   label: 'En reparacion',  color: '#ffa726' },
+          { num: dadosDeBaja,    label: 'Dados de baja',  color: '#ef5350' },
         ].map((s, i) => (
           <div key={i} style={styles.statCard}>
             <div style={{ ...styles.statNum, color: s.color }}>{s.num}</div>
@@ -24,7 +34,7 @@ export default function Dashboard({ activos, historial }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div style={styles.card}>
           <div style={{ fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.5 }}>
             Activos recientes
@@ -38,6 +48,7 @@ export default function Dashboard({ activos, historial }) {
               <span style={styles.badge(a.estado)}>{a.estado}</span>
             </div>
           ))}
+          {activos.length === 0 && <div style={{ color: '#444', fontSize: 13 }}>No hay activos registrados.</div>}
         </div>
 
         <div style={styles.card}>
@@ -51,8 +62,35 @@ export default function Dashboard({ activos, historial }) {
               <div style={{ fontSize: 11, color: '#444', marginTop: 2 }}>{h.fecha}</div>
             </div>
           ))}
+          {historial.length === 0 && <div style={{ color: '#444', fontSize: 13 }}>No hay actividad reciente.</div>}
         </div>
       </div>
+
+      {/* M-11: Gráfico de distribución por tipo */}
+      {activos.length > 0 && (
+        <div style={styles.card}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Distribucion por tipo
+          </div>
+          {Object.entries(porTipo).map(([tipo, count], i) => (
+            <div key={tipo} style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888', marginBottom: 4 }}>
+                <span>{tipo}</span>
+                <span>{count} ({Math.round((count / activos.length) * 100)}%)</span>
+              </div>
+              <div style={{ background: '#1a1a1a', borderRadius: 4, height: 8 }}>
+                <div style={{
+                  background: coloresTipo[i % coloresTipo.length],
+                  borderRadius: 4,
+                  height: 8,
+                  width: `${(count / activos.length) * 100}%`,
+                  transition: 'width 0.5s ease'
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

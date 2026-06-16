@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { styles } from '../styles/styles';
 import { getMantenciones, crearMantencion, actualizarMantencion, eliminarMantencion } from '../api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const TIPOS = ['Preventiva', 'Correctiva', 'Predictiva'];
 const ESTADOS = ['Pendiente', 'En proceso', 'Completada'];
@@ -17,11 +19,12 @@ const FORM_INICIAL = {
 
 export default function Mantenciones({ activos, rol, cargarDatos }) {
   const [mantenciones, setMantenciones] = useState([]);
-  const [modal, setModal]   = useState(false);
-  const [form, setForm]     = useState(FORM_INICIAL);
-  const [editId, setEditId] = useState(null);
+  const [modal, setModal]     = useState(false);
+  const [form, setForm]       = useState(FORM_INICIAL);
+  const [editId, setEditId]   = useState(null);
   const [loading, setLoading] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => { cargarMantenciones(); }, []);
 
@@ -50,7 +53,11 @@ export default function Mantenciones({ activos, rol, cargarDatos }) {
   }
 
   async function guardar() {
-    if (!form.activo_id || !form.descripcion || !form.tecnico) return alert('Completa todos los campos obligatorios.');
+    if (!form.activo_id) return alert('Debes seleccionar un activo.');
+    if (!form.tipo) return alert('El tipo es obligatorio.');
+    if (!form.descripcion.trim()) return alert('La descripción es obligatoria.');
+    if (!form.tecnico.trim()) return alert('El nombre del técnico es obligatorio.');
+    if (!form.fecha) return alert('La fecha es obligatoria.');
     setLoading(true);
     try {
       if (editId) {
@@ -80,9 +87,41 @@ export default function Mantenciones({ activos, rol, cargarDatos }) {
     }
   }
 
-  const mantencionsFiltradas = filtroEstado
-    ? mantenciones.filter(m => m.estado === filtroEstado)
-    : mantenciones;
+  const mantencionsFiltradas = mantenciones
+    .filter(m => filtroEstado ? m.estado === filtroEstado : true)
+    .filter(m => busqueda
+      ? m.tecnico.toLowerCase().includes(busqueda.toLowerCase()) ||
+        m.descripcion.toLowerCase().includes(busqueda.toLowerCase())
+      : true
+    );
+
+  function exportarPDF() {
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-CL');
+
+    doc.setFontSize(16);
+    doc.setTextColor(31, 78, 121);
+    doc.text('SoporteTech Ltda.', 14, 20);
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text('Reporte de Mantenciones', 14, 28);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${fecha}  |  Total: ${mantencionsFiltradas.length} mantenciones`, 14, 35);
+
+    autoTable(doc, {
+      startY: 42,
+      head: [['Activo', 'Tipo', 'Descripcion', 'Tecnico', 'Estado', 'Fecha']],
+      body: mantencionsFiltradas.map(m => {
+        const activo = activos.find(a => a.id === m.activo_id);
+        return [activo?.nombre || `ID: ${m.activo_id}`, m.tipo, m.descripcion, m.tecnico, m.estado, m.fecha];
+      }),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [31, 78, 121] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    doc.save(`mantenciones_${new Date().toISOString().split('T')[0]}.pdf`);
+  }
 
   const colorEstado = { 'Pendiente': '#ffa726', 'En proceso': '#4fc3f7', 'Completada': '#66bb6a' };
 
@@ -93,9 +132,9 @@ export default function Mantenciones({ activos, rol, cargarDatos }) {
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total', count: mantenciones.length, color: '#4fc3f7' },
-          { label: 'Pendientes', count: mantenciones.filter(m => m.estado === 'Pendiente').length, color: '#ffa726' },
-          { label: 'En proceso', count: mantenciones.filter(m => m.estado === 'En proceso').length, color: '#4fc3f7' },
+          { label: 'Total',       count: mantenciones.length, color: '#4fc3f7' },
+          { label: 'Pendientes',  count: mantenciones.filter(m => m.estado === 'Pendiente').length, color: '#ffa726' },
+          { label: 'En proceso',  count: mantenciones.filter(m => m.estado === 'En proceso').length, color: '#4fc3f7' },
           { label: 'Completadas', count: mantenciones.filter(m => m.estado === 'Completada').length, color: '#66bb6a' },
         ].map((s, i) => (
           <div key={i} style={styles.statCard}>
@@ -106,11 +145,22 @@ export default function Mantenciones({ activos, rol, cargarDatos }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <select style={{ ...styles.input, width: 200 }} value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
-          <option value="">Todos los estados</option>
-          {ESTADOS.map(e => <option key={e}>{e}</option>)}
-        </select>
-        <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nueva Mantencion</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input
+            style={{ ...styles.input, width: 220 }}
+            placeholder="Buscar por técnico o descripción..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+          />
+          <select style={{ ...styles.input, width: 200 }} value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)}>
+            <option value="">Todos los estados</option>
+            {ESTADOS.map(e => <option key={e}>{e}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={styles.btn('ghost')} onClick={exportarPDF}>Exportar PDF</button>
+          <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nueva Mantencion</button>
+        </div>
       </div>
 
       <div style={styles.card}>
@@ -187,7 +237,7 @@ export default function Mantenciones({ activos, rol, cargarDatos }) {
                 <input style={styles.input} placeholder="Nombre del tecnico" value={form.tecnico} onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))} />
               </div>
               <div>
-                <label style={styles.label}>Fecha inicio</label>
+                <label style={styles.label}>Fecha inicio *</label>
                 <input style={styles.input} type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} />
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
