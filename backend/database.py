@@ -3,6 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 SQLALCHEMY_DATABASE_URL = "postgresql://gestor_activos_db_user:m2qL3auEBBldieBR8M4pNB05cbXuqgCW@dpg-d8o4absm0tmc73aka2l0-a/gestor_activos_db"
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1e4708b9 (Agregar seed de activos al iniciar servidor)
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
 )

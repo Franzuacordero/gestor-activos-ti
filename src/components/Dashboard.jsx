@@ -6,7 +6,7 @@ export default function Dashboard({ activos, historial }) {
   const dadosDeBaja  = activos.filter(a => a.estado === 'Dado de baja').length;
   const asignados    = activos.filter(a => a.asignado_a).length;
 
-  // M-11: Distribución por tipo para gráfico
+  //  Distribución por tipo para gráfico
   const porTipo = activos.reduce((acc, a) => {
     acc[a.tipo] = (acc[a.tipo] || 0) + 1;
     return acc;
@@ -66,7 +66,7 @@ export default function Dashboard({ activos, historial }) {
         </div>
       </div>
 
-      {/* M-11: Gráfico de distribución por tipo */}
+      {/*  Gráfico de distribución por tipo */}
       {activos.length > 0 && (
         <div style={styles.card}>
           <div style={{ fontSize: 13, fontWeight: 500, color: '#888', marginBottom: 16, textTransform: 'uppercase', letterSpacing: 0.5 }}>
