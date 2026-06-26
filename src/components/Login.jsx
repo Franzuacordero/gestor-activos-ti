@@ -6,6 +6,7 @@ export default function Login({ onLogin }) {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mostrarPass, setMostrarPass] = useState(false);
 
   async function handleLogin() {
     if (!form.username || !form.password) return setError('Completa todos los campos.');
@@ -15,6 +16,7 @@ export default function Login({ onLogin }) {
       const data = await login(form.username, form.password);
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('username', form.username);
+      localStorage.setItem('rol', data.rol);
       onLogin(form.username);
     } catch (err) {
       setError('Usuario o contraseña incorrectos.');
@@ -53,16 +55,29 @@ export default function Login({ onLogin }) {
           />
         </div>
 
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 16 }}>
           <label style={styles.label}>Contraseña</label>
-          <input
-            style={styles.input}
-            type="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type={mostrarPass ? 'text' : 'password'}
+              style={{ ...styles.input, paddingRight: 40 }}
+              placeholder="••••••••"
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarPass(!mostrarPass)}
+              style={{
+                position: 'absolute', right: 10, top: '50%',
+                transform: 'translateY(-50%)', background: 'none',
+                border: 'none', cursor: 'pointer', color: '#555', fontSize: 16
+              }}
+            >
+              {mostrarPass ? '🙈' : '👁️'}
+            </button>
+          </div>
         </div>
 
         {error && (

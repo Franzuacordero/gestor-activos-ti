@@ -23,7 +23,7 @@ export default function App() {
   const [pagina,    setPagina]    = useState('dashboard');
   const [activos,   setActivos]   = useState([]);
   const [historial, setHistorial] = useState([]);
-  const [usuario,   setUsuario]   = useState(localStorage.getItem('username'));
+  const [usuario, setUsuario] = useState(null);
   const [rol,       setRol]       = useState(localStorage.getItem('rol'));
   const [loading,   setLoading]   = useState(false);
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
