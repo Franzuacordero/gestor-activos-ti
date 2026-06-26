@@ -19,7 +19,7 @@ router = APIRouter(prefix="/activos", tags=["Activos"])
 # ── OBTENER TODOS ─────────────────────────────────────
 @router.get("/", response_model=List[ActivoResponse])
 def get_activos(db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
-    return db.query(models.Activo).all()
+    return db.query(models.Activo).order_by(models.Activo.id).all()
 
 # ── OBTENER UNO ───────────────────────────────────────
 @router.get("/{id}", response_model=ActivoResponse)
