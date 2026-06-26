@@ -61,6 +61,16 @@ export const desasignarActivo = async (id) => {
   return res.data;
 };
 
+export const getDetalleActivo = async (id) => {
+  const res = await api.get(`/activos/${id}/detalle`);
+  return res.data;
+};
+
+export const getNotificaciones = async () => {
+  const res = await api.get('/activos/notificaciones/alertas');
+  return res.data;
+};
+
 // ── HISTORIAL ─────────────────────────────────────────
 export const getHistorial = async () => {
   const res = await api.get('/activos/historial/todos');

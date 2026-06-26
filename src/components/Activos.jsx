@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { styles } from '../styles/styles';
 import { TIPOS, ESTADOS } from '../data/datosIniciales';
 import { crearActivo, actualizarActivo, eliminarActivo } from '../api';
+import DetalleActivo from './DetalleActivo';
 
 const FORM_INICIAL = { nombre: '', tipo: 'Computador', marca: '', modelo: '', serie: '', estado: 'Operativo', fecha: '' };
 const ITEMS_POR_PAGINA = 8;
@@ -14,6 +15,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
   const [loading, setLoading] = useState(false);
   const [filtroTipo,   setFiltroTipo]   = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [activoSeleccionado, setActivoSeleccionado] = useState(null);
   //  Paginación
   const [pagina, setPagina] = useState(1);
 
@@ -81,7 +83,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
       alert('Error al eliminar');
     }
   }
-
+  if (activoSeleccionado) return <DetalleActivo activoId={activoSeleccionado} onVolver={() => setActivoSeleccionado(null)} />;
   return (
     <div>
       <div style={styles.pageTitle}>Registro de Activos</div>
@@ -138,6 +140,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
                   <div style={{ display: 'flex', gap: 6 }}>
                     {rol === 'admin' ? (
                       <>
+                        <button style={styles.btn('ghost')} onClick={() => setActivoSeleccionado(a.id)}>Ver</button>
                         <button style={styles.btn('ghost')}  onClick={() => abrirEditar(a)}>Editar</button>
                         <button style={styles.btn('danger')} onClick={() => eliminar(a.id)}>Eliminar</button>
                       </>

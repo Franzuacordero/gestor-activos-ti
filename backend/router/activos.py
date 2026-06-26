@@ -6,6 +6,8 @@ from schemas import ActivoCreate, ActivoUpdate, ActivoResponse, HistorialCreate,
 from auth import get_usuario_actual
 from datetime import date
 from typing import List
+from datetime import datetime, timedelta
+
 
 router = APIRouter(prefix="/activos", tags=["Activos"])
 
@@ -104,3 +106,35 @@ def get_historial(id: int, db: Session = Depends(get_db), usuario=Depends(get_us
 @router.get("/historial/todos", response_model=List[HistorialResponse])
 def get_historial_todos(db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
     return db.query(models.Historial).all()
+
+@router.get("/{id}/detalle")
+def get_detalle_activo(id: int, db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
+    activo = db.query(models.Activo).filter(models.Activo.id == id).first()
+    if not activo:
+        raise HTTPException(status_code=404, detail="Activo no encontrado")
+    historial = db.query(models.Historial).filter(models.Historial.activo_id == id).all()
+    mantenciones = db.query(models.Mantencion).filter(models.Mantencion.activo_id == id).all()
+    return {
+        "activo": activo,
+        "historial": historial,
+        "mantenciones": mantenciones
+    }
+
+@router.get("/notificaciones/alertas")
+def get_notificaciones(db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
+    activos = db.query(models.Activo).filter(models.Activo.estado == "En reparacion").all()
+    alertas = []
+    hoy = datetime.now().date()
+    for activo in activos:
+        if activo.fecha:
+            fecha_ingreso = datetime.strptime(activo.fecha, "%Y-%m-%d").date()
+            dias = (hoy - fecha_ingreso).days
+            if dias > 7:
+                alertas.append({
+                    "id": activo.id,
+                    "nombre": activo.nombre,
+                    "serie": activo.serie,
+                    "dias_en_reparacion": dias,
+                    "fecha": activo.fecha
+                })
+    return alertas

@@ -8,6 +8,7 @@ import Reporteria   from './components/Reporteria';
 import Mantenciones from './components/Mantenciones';
 import Usuarios from './components/Usuarios';
 import Login        from './components/Login';
+import Notificaciones from './components/Notificaciones';
 
 const NAV = [
   { id: 'dashboard',    label: 'Dashboard',    icon: '▦' },
@@ -25,6 +26,7 @@ export default function App() {
   const [usuario,   setUsuario]   = useState(localStorage.getItem('username'));
   const [rol,       setRol]       = useState(localStorage.getItem('rol'));
   const [loading,   setLoading]   = useState(false);
+  const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
 
   useEffect(() => {
     if (usuario) cargarDatos();
@@ -94,10 +96,17 @@ export default function App() {
         {activos.filter(a => a.estado === 'En reparacion').length}
       </span>
     )}
+    {mostrarNotificaciones && <Notificaciones onClose={() => setMostrarNotificaciones(false)} />}
   </div>
 ))}
         <div style={{ flex: 1 }} />
         <div style={{ padding: '16px 20px', borderTop: '1px solid #222' }}>
+          <button 
+  style={{ ...styles.btn('ghost'), width: '100%', fontSize: 11, marginBottom: 8, position: 'relative' }}
+  onClick={() => setMostrarNotificaciones(true)}
+>
+ Notificaciones
+</button>
           <div style={{ fontSize: 12, color: '#ddd', marginBottom: 4 }}>{usuario}</div>
           <div style={{ fontSize: 10, color: rol === 'admin' ? '#4fc3f7' : '#ffa726', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>{rol || 'tecnico'}</div>
           <button style={{ ...styles.btn('danger'), width: '100%', fontSize: 11 }} onClick={handleLogout}>
