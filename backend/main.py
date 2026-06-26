@@ -16,6 +16,15 @@ from passlib.context import CryptContext
 # Crear tablas en la base de datos
 models.Base.metadata.create_all(bind=engine)
 
+# Agregar columna foto_url si no existe
+from sqlalchemy import text
+with engine.connect() as conn:
+    try:
+        conn.execute(text("ALTER TABLE activos ADD COLUMN foto_url VARCHAR"))
+        conn.commit()
+    except:
+        pass
+
 # Poblar base de datos inicial si está vacía
 def seed_inicial():
     pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
