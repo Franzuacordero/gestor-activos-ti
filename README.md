@@ -175,12 +175,12 @@ Se ejecutaron 15 casos de prueba con 100% de éxito:
 
 | Categoría | Casos | Resultado |
 |-----------|-------|-----------|
-| Autenticación | CP-01 al CP-03 | ✅ EXITOSO |
-| Gestión de Activos | CP-04 al CP-07 | ✅ EXITOSO |
-| Asignación | CP-08 al CP-09 | ✅ EXITOSO |
-| Mantenciones | CP-10 al CP-11 | ✅ EXITOSO |
-| Reportería | CP-12 al CP-14 | ✅ EXITOSO |
-| Seguridad | CP-15 | ✅ EXITOSO |
+| Autenticación | CP-01 al CP-03 |  EXITOSO |
+| Gestión de Activos | CP-04 al CP-07 |  EXITOSO |
+| Asignación | CP-08 al CP-09 |  EXITOSO |
+| Mantenciones | CP-10 al CP-11 |  EXITOSO |
+| Reportería | CP-12 al CP-14 |  EXITOSO |
+| Seguridad | CP-15 |  EXITOSO |
 
 ---
 
