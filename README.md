@@ -30,6 +30,11 @@ SoporteTech Ltda. gestionaba sus activos tecnológicos en planillas Excel desact
 -  **Asignación**: Asignar/desasignar equipos con historial automático
 -  **Mantenciones**: Registro preventivo/correctivo con seguimiento de estado
 -  **Reportería**: Dashboard con estadísticas y exportación PDF/CSV
+-  **Usuarios**: Gestión de usuarios desde la app (solo admin)
+-  **Detalle de Activo**: Historial completo por activo con foto
+-  **Notificaciones**: Alertas de activos en reparación por más de 7 días
+-  **Foto de Activo**: Subida de imágenes via Cloudinary
+-  **Cambiar Contraseña**: Desde el sidebar sin cerrar sesión
 
 ---
 
@@ -43,6 +48,7 @@ SoporteTech Ltda. gestionaba sus activos tecnológicos en planillas Excel desact
 | Autenticación | JWT + bcrypt |
 | Despliegue | Render (PaaS) |
 | Exportación | jsPDF + jspdf-autotable |
+| Almacenamiento | Cloudinary (imágenes) |
 
 ---
 
@@ -92,6 +98,9 @@ gestor-activos/
 │   │   ├── Asignacion.jsx
 │   │   ├── Mantenciones.jsx
 │   │   └── Reporteria.jsx
+│   │   ├── Usuarios.jsx
+│   │   ├── DetalleActivo.jsx
+│   │   └── Notificaciones.jsx
 │   └── styles/
 │       └── styles.js        ← estilos globales
 ├── package.json
@@ -155,6 +164,7 @@ rol               marca             descripcion       descripcion
                   estado                              fecha
                   asignado_a                          fecha_fin
                   fecha
+                  foto_url
 ```
 
 ---
