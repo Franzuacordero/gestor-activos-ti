@@ -7,7 +7,7 @@ from auth import get_usuario_actual
 from datetime import date
 from typing import List
 from datetime import datetime, timedelta
-
+import cloudinary_config
 import cloudinary
 import cloudinary.uploader
 
