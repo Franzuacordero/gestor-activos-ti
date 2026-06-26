@@ -87,3 +87,7 @@ class MantencionResponse(MantencionBase):
 
     class Config:
         from_attributes = True
+
+class CambiarPassword(BaseModel):
+    password_actual: str
+    nueva_password: str

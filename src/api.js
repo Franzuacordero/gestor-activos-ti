@@ -129,3 +129,8 @@ export const subirFotoActivo = async (id, foto) => {
   });
   return res.data;
 };
+
+export const cambiarPassword = async (datos) => {
+  const res = await api.put('/usuarios/cambiar-password', datos);
+  return res.data;
+};

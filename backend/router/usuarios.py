@@ -4,6 +4,7 @@ from database import get_db
 from models import models
 from schemas import UsuarioCreate, UsuarioResponse
 from auth import hashear_password, get_usuario_actual
+from schemas import CambiarPassword
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
@@ -45,3 +46,11 @@ def eliminar_usuario(id: int, db: Session = Depends(get_db), usuario=Depends(get
     db.delete(u)
     db.commit()
     return {"message": "Usuario eliminado correctamente"}
+
+@router.put("/cambiar-password")
+def cambiar_password(datos: CambiarPassword, db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
+    if not verificar_password(datos.password_actual, usuario.password):
+        raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+    usuario.password = hashear_password(datos.nueva_password)
+    db.commit()
+    return {"message": "Contraseña actualizada correctamente"}
