@@ -9,6 +9,7 @@ from models import models
 from router import activos as activos_router
 from router import auth as auth_router
 from router import mantenciones as mantenciones_router
+from router import usuarios as usuarios_router
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
@@ -75,6 +76,7 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(activos_router.router)
 app.include_router(mantenciones_router.router)
+app.include_router(usuarios_router.router)
 
 @app.get("/")
 def root():

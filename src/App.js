@@ -6,6 +6,7 @@ import Activos      from './components/Activos';
 import Asignacion   from './components/Asignacion';
 import Reporteria   from './components/Reporteria';
 import Mantenciones from './components/Mantenciones';
+import Usuarios from './components/Usuarios';
 import Login        from './components/Login';
 
 const NAV = [
@@ -14,6 +15,7 @@ const NAV = [
   { id: 'asignacion',   label: 'Asignacion',   icon: '⇄' },
   { id: 'mantenciones', label: 'Mantenciones', icon: '⚙' },
   { id: 'reporteria',   label: 'Reporteria',   icon: '▤' },
+  { id: 'usuarios', label: 'Usuarios', icon: '👤' },
 ];
 
 export default function App() {
@@ -70,6 +72,7 @@ export default function App() {
       {pagina === 'asignacion'   && <Asignacion   activos={activos} setActivos={setActivos} historial={historial} setHistorial={setHistorial} cargarDatos={cargarDatos} rol={rol} />}
       {pagina === 'mantenciones' && <Mantenciones activos={activos} rol={rol} cargarDatos={cargarDatos} />}
       {pagina === 'reporteria'   && <Reporteria   activos={activos} historial={historial} />}
+      {pagina === 'usuarios' && <Usuarios rol={rol} />}
     </>
   );
 

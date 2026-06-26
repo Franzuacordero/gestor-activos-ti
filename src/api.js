@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://gestor-activos-backend.onrender.com';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://gestor-activos-backend.onrender.com';
 
 // ── INSTANCIA BASE ────────────────────────────────────
 const api = axios.create({
@@ -92,5 +92,21 @@ export const actualizarMantencion = async (id, mantencion) => {
 
 export const eliminarMantencion = async (id) => {
   const res = await api.delete(`/mantenciones/${id}`);
+  return res.data;
+};
+
+// USUARIOS
+export const getUsuarios = async () => {
+  const res = await api.get('/usuarios/');
+  return res.data;
+};
+
+export const crearUsuario = async (datos) => {
+  const res = await api.post('/usuarios/', datos);
+  return res.data;
+};
+
+export const eliminarUsuario = async (id) => {
+  const res = await api.delete(`/usuarios/${id}`);
   return res.data;
 };
