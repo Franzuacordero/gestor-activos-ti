@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { styles } from '../styles/styles';
 import { TIPOS, ESTADOS } from '../data/datosIniciales';
-import { crearActivo, actualizarActivo, eliminarActivo } from '../api';
+import { crearActivo, actualizarActivo, eliminarActivo, subirFotoActivo } from '../api';
 import DetalleActivo from './DetalleActivo';
 
 const FORM_INICIAL = { nombre: '', tipo: 'Computador', marca: '', modelo: '', serie: '', estado: 'Operativo', fecha: '' };
@@ -16,7 +16,9 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
   const [filtroTipo,   setFiltroTipo]   = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [activoSeleccionado, setActivoSeleccionado] = useState(null);
-  //  Paginación
+  const [modalFoto, setModalFoto] = useState(null);
+  const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [pagina, setPagina] = useState(1);
 
   const activosFiltrados = activos.filter(a =>
@@ -26,7 +28,6 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     (filtroEstado ? a.estado === filtroEstado : true)
   );
 
-  //  Paginación
   const totalPaginas = Math.ceil(activosFiltrados.length / ITEMS_POR_PAGINA);
   const activosPaginados = activosFiltrados.slice(
     (pagina - 1) * ITEMS_POR_PAGINA,
@@ -45,7 +46,6 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     setModal(true);
   }
 
-  //  Validación robusta en formularios
   async function guardar() {
     if (!form.nombre.trim()) return alert('El nombre es obligatorio.');
     if (!form.tipo) return alert('El tipo es obligatorio.');
@@ -83,7 +83,25 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
       alert('Error al eliminar');
     }
   }
+
+  async function subirFoto() {
+    if (!fotoSeleccionada) return alert('Selecciona una imagen primero.');
+    setSubiendoFoto(true);
+    try {
+      await subirFotoActivo(modalFoto, fotoSeleccionada);
+      await cargarDatos();
+      setModalFoto(null);
+      setFotoSeleccionada(null);
+      alert('Foto subida exitosamente.');
+    } catch (err) {
+      alert('Error al subir la foto.');
+    } finally {
+      setSubiendoFoto(false);
+    }
+  }
+
   if (activoSeleccionado) return <DetalleActivo activoId={activoSeleccionado} onVolver={() => setActivoSeleccionado(null)} />;
+
   return (
     <div>
       <div style={styles.pageTitle}>Registro de Activos</div>
@@ -107,22 +125,22 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
           </select>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-    {(filtro || filtroTipo || filtroEstado) && (
-      <button style={styles.btn('ghost')} onClick={() => { setFiltro(''); setFiltroTipo(''); setFiltroEstado(''); setPagina(1); }}>
-        ✕ Limpiar filtros
-      </button>
-    )}
-    {rol === 'admin' && (
-      <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nuevo Activo</button>
-    )}
-  </div>
+          {(filtro || filtroTipo || filtroEstado) && (
+            <button style={styles.btn('ghost')} onClick={() => { setFiltro(''); setFiltroTipo(''); setFiltroEstado(''); setPagina(1); }}>
+              ✕ Limpiar filtros
+            </button>
+          )}
+          {rol === 'admin' && (
+            <button style={styles.btn('primary')} onClick={abrirNuevo}>+ Nuevo Activo</button>
+          )}
+        </div>
       </div>
 
       <div style={styles.card}>
         <table style={styles.table}>
           <thead>
             <tr>
-              {['Nombre', 'Tipo', 'Marca / Modelo', 'N° Serie', 'Estado', 'Asignado a', 'Acciones'].map(h => (
+              {['Foto', 'Nombre', 'Tipo', 'Marca / Modelo', 'N° Serie', 'Estado', 'Asignado a', 'Acciones'].map(h => (
                 <th key={h} style={styles.th}>{h}</th>
               ))}
             </tr>
@@ -130,6 +148,12 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
           <tbody>
             {activosPaginados.map(a => (
               <tr key={a.id}>
+                <td style={styles.td}>
+                  {a.foto_url
+                    ? <img src={a.foto_url} alt="foto" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                    : <div style={{ width: 40, height: 40, background: '#1a1a1a', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📦</div>
+                  }
+                </td>
                 <td style={styles.td}>{a.nombre}</td>
                 <td style={{ ...styles.td, color: '#666' }}>{a.tipo}</td>
                 <td style={{ ...styles.td, color: '#666' }}>{a.marca} {a.modelo}</td>
@@ -138,10 +162,11 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
                 <td style={{ ...styles.td, color: a.asignado_a ? '#ddd' : '#444' }}>{a.asignado_a || '—'}</td>
                 <td style={styles.td}>
                   <div style={{ display: 'flex', gap: 6 }}>
+                    <button style={styles.btn('ghost')} onClick={() => setActivoSeleccionado(a.id)}>Ver</button>
                     {rol === 'admin' ? (
                       <>
-                        <button style={styles.btn('ghost')} onClick={() => setActivoSeleccionado(a.id)}>Ver</button>
-                        <button style={styles.btn('ghost')}  onClick={() => abrirEditar(a)}>Editar</button>
+                        <button style={styles.btn('ghost')} onClick={() => setModalFoto(a.id)}>📸</button>
+                        <button style={styles.btn('ghost')} onClick={() => abrirEditar(a)}>Editar</button>
                         <button style={styles.btn('danger')} onClick={() => eliminar(a.id)}>Eliminar</button>
                       </>
                     ) : (
@@ -152,12 +177,11 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
               </tr>
             ))}
             {activosPaginados.length === 0 && (
-              <tr><td colSpan={7} style={{ ...styles.td, textAlign: 'center', color: '#444', padding: 32 }}>No se encontraron activos.</td></tr>
+              <tr><td colSpan={8} style={{ ...styles.td, textAlign: 'center', color: '#444', padding: 32 }}>No se encontraron activos.</td></tr>
             )}
           </tbody>
         </table>
 
-        {/*  Paginación */}
         {totalPaginas > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: 16, borderTop: '1px solid #1a1a1a' }}>
             <button
@@ -175,6 +199,7 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
         )}
       </div>
 
+      {/* Modal nuevo/editar activo */}
       {modal && (
         <div style={styles.modal}>
           <div style={styles.modalBox}>
@@ -208,9 +233,44 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
-              <button style={styles.btn('ghost')}   onClick={() => setModal(false)}>Cancelar</button>
+              <button style={styles.btn('ghost')} onClick={() => setModal(false)}>Cancelar</button>
               <button style={styles.btn('primary')} onClick={guardar} disabled={loading}>
                 {loading ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal foto */}
+      {modalFoto && (
+        <div style={styles.modal}>
+          <div style={styles.modalBox}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 20 }}>
+              Subir Foto del Activo
+            </div>
+            {activosPaginados.find(a => a.id === modalFoto)?.foto_url && (
+              <div style={{ marginBottom: 16, textAlign: 'center' }}>
+                <img
+                  src={activosPaginados.find(a => a.id === modalFoto)?.foto_url}
+                  alt="foto activo"
+                  style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }}
+                />
+              </div>
+            )}
+            <div style={{ marginBottom: 16 }}>
+              <label style={styles.label}>Seleccionar imagen</label>
+              <input
+                type="file"
+                accept="image/*"
+                style={{ ...styles.input, padding: 8 }}
+                onChange={e => setFotoSeleccionada(e.target.files[0])}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button style={styles.btn('ghost')} onClick={() => { setModalFoto(null); setFotoSeleccionada(null); }}>Cancelar</button>
+              <button style={styles.btn('primary')} onClick={subirFoto} disabled={subiendoFoto}>
+                {subiendoFoto ? 'Subiendo...' : 'Subir Foto'}
               </button>
             </div>
           </div>
@@ -219,5 +279,4 @@ export default function Activos({ activos, setActivos, setHistorial, cargarDatos
     </div>
   );
 }
-
 

@@ -21,6 +21,7 @@ class ActivoUpdate(ActivoBase):
 class ActivoResponse(ActivoBase):
     id: int
     asignado_a: Optional[str] = None
+    foto_url: Optional[str] = None
 
     class Config:
         from_attributes = True

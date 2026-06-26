@@ -120,3 +120,12 @@ export const eliminarUsuario = async (id) => {
   const res = await api.delete(`/usuarios/${id}`);
   return res.data;
 };
+
+export const subirFotoActivo = async (id, foto) => {
+  const formData = new FormData();
+  formData.append('foto', foto);
+  const res = await api.post(`/activos/${id}/foto`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return res.data;
+};

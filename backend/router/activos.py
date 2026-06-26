@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from database import get_db
 from models import models
@@ -7,6 +7,11 @@ from auth import get_usuario_actual
 from datetime import date
 from typing import List
 from datetime import datetime, timedelta
+
+import cloudinary
+import cloudinary.uploader
+
+
 
 
 router = APIRouter(prefix="/activos", tags=["Activos"])
@@ -138,3 +143,15 @@ def get_notificaciones(db: Session = Depends(get_db), usuario=Depends(get_usuari
                     "fecha": activo.fecha
                 })
     return alertas
+
+@router.post("/{id}/foto")
+async def subir_foto(id: int, foto: UploadFile = File(...), db: Session = Depends(get_db), usuario=Depends(get_usuario_actual)):
+    activo = db.query(models.Activo).filter(models.Activo.id == id).first()
+    if not activo:
+        raise HTTPException(status_code=404, detail="Activo no encontrado")
+    contenido = await foto.read()
+    resultado = cloudinary.uploader.upload(contenido, folder="activos")
+    activo.foto_url = resultado["secure_url"]
+    db.commit()
+    db.refresh(activo)
+    return {"foto_url": activo.foto_url}

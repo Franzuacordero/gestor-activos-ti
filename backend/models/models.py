@@ -14,6 +14,7 @@ class Activo(Base):
     estado      = Column(String, default="Operativo")
     asignado_a  = Column(String, nullable=True)
     fecha       = Column(String, nullable=True)
+    foto_url    = Column(String, nullable=True)
 
 class Historial(Base):
     __tablename__ = "historial"
