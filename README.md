@@ -82,12 +82,14 @@ gestor-activos/
 │   ├── auth.py              ← lógica JWT + bcrypt
 │   ├── seed.py              ← script para poblar BD
 │   ├── requirements.txt     ← dependencias Python
+│   ├── cloudinary_config.py ← configuración Cloudinary
 │   ├── models/
 │   │   └── models.py        ← tablas: Usuario, Activo, Historial, Mantencion
 │   └── router/
 │       ├── activos.py       ← endpoints CRUD activos
 │       ├── auth.py          ← endpoints login/registro
 │       └── mantenciones.py  ← endpoints mantenciones
+│       └── usuarios.py      ← endpoints gestión usuarios
 ├── src/
 │   ├── App.js               ← componente principal + navegación
 │   ├── api.js               ← llamadas axios al backend
